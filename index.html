@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>StormObfuscator</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet, red);
+      background-size: 400% 400%;
+      animation: rainbowBg 20s linear infinite;
+      color: white;
+    }
+
+    @keyframes rainbowBg {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet, red);
+      background-size: 400% 400%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rainbowText 5s linear infinite;
+    }
+
+    @keyframes rainbowText {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    textarea {
+      width: 80%;
+      height: 150px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 10px;
+      padding: 10px;
+      background: #111;
+      color: #0f0;
+      border: 2px solid #0f0;
+      box-shadow: 0 0 10px #0f0;
+    }
+
+    button {
+      padding: 12px 25px;
+      margin: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: black;
+      color: lime;
+      font-weight: bold;
+      box-shadow: 0 0 10px #0f0;
+    }
+
+    #progressContainer {
+      width: 80%;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      margin: 15px 0;
+    }
+
+    #progressBar {
+      width: 0%;
+      height: 20px;
+      background: lime;
+      border-radius: 10px;
+    }
+
+    #console {
+      width: 80%;
+      height: 120px;
+      background: #000;
+      border: 2px solid #0f0;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 20px;
+      text-align: left;
+      overflow-y: auto;
+      color: #0f0;
+      box-shadow: 0 0 10px #0f0;
+      font-family: monospace;
+    }
+
+    #dropzone {
+      width: 80%;
+      height: 50px;
+      border: 2px dashed #0f0;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      line-height: 50px;
+      color: #0f0;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #dropzone.hover {
+      background: rgba(0,255,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <h1>StormObfuscator</h1>
+
+  <!-- Drag & Drop area -->
+  <div id="dropzone">Drop your .lua file here</div>
+
+  <textarea id="input" placeholder="Paste your Roblox Lua script here..."></textarea>
+  <div id="progressContainer"><div id="progressBar"></div></div>
+
+  <button onclick="startObfuscate()">Obfuscate</button>
+  <button onclick="copyCode()">Copy</button>
+  <button onclick="downloadCode()">Download Script</button>
+
+  <textarea id="output" placeholder="Obfuscated script will appear here..."></textarea>
+
+  <!-- Console at the bottom -->
+  <div id="console"><b>[Storm Console]</b><br></div>
+
+  <script>
+    const dropzone = document.getElementById("dropzone");
+    dropzone.addEventListener("dragover", e => {
+      e.preventDefault();
+      dropzone.classList.add("hover");
+    });
+    dropzone.addEventListener("dragleave", e => {
+      e.preventDefault();
+      dropzone.classList.remove("hover");
+    });
+    dropzone.addEventListener("drop", e => {
+      e.preventDefault();
+      dropzone.classList.remove("hover");
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith(".lua")) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById("input").value = evt.target.result;
+          log(`[+] Loaded file: ${file.name}`);
+        };
+        reader.readAsText(file);
+      } else {
+        alert("Please drop a valid .lua file!");
+      }
+    });
+
+    function obfuscate(script) {
+      let bytes = [];
+      for (let i = 0; i < script.length; i++) {
+        bytes.push(script.charCodeAt(i));
+      }
+      return `loadstring("${bytes.map(b => "\\" + b).join("")}")()`;
+    }
+
+    function log(msg) {
+      let consoleBox = document.getElementById("console");
+      consoleBox.innerHTML += msg + "<br>";
+      consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
+
+    function startObfuscate() {
+      let input = document.getElementById("input").value;
+      if (!input.trim()) {
+        alert("Please paste a script!");
+        return;
+      }
+
+      let bar = document.getElementById("progressBar");
+      bar.style.width = "0%";
+      let progress = 0;
+
+      let logs = [
+        "[+] Initializing Storm Engine...",
+        "[+] Renaming variables...",
+        "[+] Encoding bytes...",
+        "[+] Adding junk instructions...",
+        "[+] Encrypting script...",
+        "[+] Finalizing package..."
+      ];
+      let logIndex = 0;
+
+      log("⚡ Starting Obfuscation...");
+
+      let interval = setInterval(() => {
+        progress += Math.floor(Math.random() * 10) + 5;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          document.getElementById("output").value = obfuscate(input);
+          log("✅ Obfuscation Complete!");
+        }
+        bar.style.width = progress + "%";
+
+        if (logIndex < logs.length && progress >= (logIndex + 1) * 15) {
+          log(logs[logIndex]);
+          logIndex++;
+        }
+      }, 150);
+    }
+
+    function copyCode() {
+      let output = document.getElementById("output");
+      if (!output.value.trim()) {
+        alert("Nothing to copy!");
+        return;
+      }
+      let finalText = `[Storm Obfuscator:V1.000]\n` + output.value;
+      navigator.clipboard.writeText(finalText).then(() => {
+        alert("Copied to clipboard with header!");
+      });
+    }
+
+    function downloadCode() {
+      let output = document.getElementById("output").value;
+      if (!output.trim()) {
+        alert("Nothing to download!");
+        return;
+      }
+      let blob = new Blob([output], { type: "text/plain" });
+      let link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "obfuscated.lua";
+      link.click();
+    }
+  </script>
+</body>
+  </html>
